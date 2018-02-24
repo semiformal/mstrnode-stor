@@ -1,0 +1,17 @@
+{
+  "name": "nodestor",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "license": "MIT",
+  "dependencies": {
+    "aws-lambda": "^0.1.2",
+    "aws-sdk": "^2.202.0",
+    "graphql": "^0.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^9.4.6",
+    "serverless-plugin-typescript": "^1.1.5",
+    "ts-node": "^5.0.0",
+    "typescript": "^2.7.2"
+  }
+}
