@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "nodestor": {
+      "schemaPath": "schema.graphql",
+      "extensions": {
+        "endpoints": {
+          "dev": "https://5ph2ep9pge.execute-api.us-east-1.amazonaws.com/dev/query"
+        }
+      }
+    }
+  }
+}

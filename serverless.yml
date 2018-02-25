@@ -1,5 +1,5 @@
 # serverless.yml
-service: graphql-api
+service: pricehistory
 
 provider:
   name: aws
@@ -8,28 +8,39 @@ provider:
   timeout: 30 # optional, in seconds, default is 6
   environment:
     DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
+    REGION : ${opt:region, self:provider.region}
   iamRoleStatements:
     - Effect: Allow
       Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
         - dynamodb:GetItem
+        - dynamodb:PutItem
         - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
 
-resources:
-  Resources:
-    NicknamesTable:
-      Type: 'AWS::DynamoDB::Table'
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: firstName
-            AttributeType: S
-        KeySchema:
-          - AttributeName: firstName
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+## This is only for reference, not a good idea to deploy durable databases using serverless
+# resources:
+#   Resources:
+#     PriceHistoryTable:
+#       Type: 'AWS::DynamoDB::Table'
+#       Properties:
+#         AttributeDefinitions:
+#           - AttributeName: coinPairKey
+#             AttributeType: S      
+#           - AttributeName: timeKey
+#             AttributeType: S      
+#         KeySchema:
+#           - AttributeName: coinPairKey
+#             KeyType: HASH
+#           - AttributeName: timeKey
+#             KeyType: RANGE
+#         ProvisionedThroughput:
+#           ReadCapacityUnits: 1
+#           WriteCapacityUnits: 1
+#         TableName: ${self:provider.environment.DYNAMODB_TABLE}
 
 package:  
   include:
@@ -42,6 +53,12 @@ functions:
       - http:
           path: query
           method: get
+          cors: true
+      - http:
+          path: query
+          method: post
+          cors: true
+
           
 plugins:
   - serverless-plugin-typescript

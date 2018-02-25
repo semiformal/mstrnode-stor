@@ -1,0 +1,42 @@
+# source: https://5ph2ep9pge.execute-api.us-east-1.amazonaws.com/dev/query
+# timestamp: Sun Feb 25 2018 00:50:08 GMT-0800 (Pacific Standard Time)
+
+schema {
+  query: RootQueryType
+  mutation: RootMutationType
+}
+
+"""The history of coin price compared across multiple trades."""
+type PriceHistory {
+  coinPairKey: String!
+  timeKey: String!
+  exchange: String
+  finalPrice: Float
+  volume24hr: Float
+  marketSize: Float
+  orderType: String
+  startCoin: String
+  endCoin: String
+}
+
+"""Used for creating new PriceHistories"""
+input PriceHistoryInput {
+  coinPairKey: String!
+  timeKey: String!
+  exchange: String
+  finalPrice: Float
+  volume24hr: Float
+  marketSize: Float
+  orderType: String
+  startCoin: String
+  endCoin: String
+}
+
+type RootMutationType {
+  upsertPriceHistory(priceHistory: PriceHistoryInput): PriceHistory
+}
+
+type RootQueryType {
+  getPriceHistory(coinPairKey: String!, timeKey: String!): PriceHistory
+  getLatestPriceHistory(coinPairKey: String!): PriceHistory
+}
