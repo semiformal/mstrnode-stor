@@ -1,5 +1,5 @@
-# source: https://5ph2ep9pge.execute-api.us-east-1.amazonaws.com/dev/query
-# timestamp: Sun Feb 25 2018 00:50:08 GMT-0800 (Pacific Standard Time)
+# source: https://5ph2ep9pge.execute-api.us-east-1.amazonaws.com/dev/graphql
+# timestamp: Sun Feb 25 2018 13:25:50 GMT-0800 (Pacific Standard Time)
 
 schema {
   query: RootQueryType

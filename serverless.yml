@@ -3,12 +3,14 @@ service: pricehistory
 
 provider:
   name: aws
+  stage: ${opt:stage, 'dev'}
   runtime: nodejs6.10
   memorySize: 128 # optional, in MB, default is 1024
-  timeout: 30 # optional, in seconds, default is 6
+  timeout: 15 # optional, in seconds, default is 6
   environment:
     DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
     REGION : ${opt:region, self:provider.region}
+    STAGE : ${self:provider.stage}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -44,19 +46,27 @@ provider:
 
 package:  
   include:
-    - handler.query
+    - handler.graphqlHandler
+    - handler.graphiqlHandler
 
 functions:
-  query:
-    handler: handler.query
+  graphql:
+    handler: handler.graphqlHandler
     events:
       - http:
-          path: query
+          path: /graphql
           method: get
           cors: true
       - http:
-          path: query
+          path: /graphql
           method: post
+          cors: true
+  graphiql:
+    handler: handler.graphiqlHandler
+    events:
+      - http:
+          path: /graphiql
+          method: get
           cors: true
 
           

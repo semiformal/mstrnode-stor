@@ -1,25 +1,12 @@
-import { graphapi } from './graphapi';
+//import { graphapi } from './graphapi';
 import * as moment from 'moment';
-
-const cb = (err, result) => {
-    console.log(err);
-    console.log(result);
-    let body;
-    let errors;
-    if (Boolean(result)) {
-        body = JSON.parse(result.body);
-        errors = body.errors;
-        if (!!errors) {
-            console.log(errors);
-        }
-    }
-}
+import { graphqlHandler } from './handler';
 
 let now = moment().utc().format();
 
 //let now = "2018-02-25T06:00:00Z";
 
-let createQuery = `
+let batchCreate = `
         mutation 
         {
             a1: upsertPriceHistory(
@@ -40,24 +27,23 @@ let createQuery = `
             ) { coinPairKey }
         }
         `;
+
 let simpleCreateQuery = `
         mutation 
         {
-            upsertPriceHistory(
+            upsertPriceHistory(                
                 priceHistory: {
                     coinPairKey: "BTC"
-                    timeKey: "2018-02-22T02:00:00Z"
+                    timeKey: "${now}"                    
                     exchange: "GDAX"
-                    finalPrice: 29
+                    finalPrice: 2
                 }
             ) { coinPairKey }
         }
         `;
 
-let get = {
-    'queryStringParameters': {
-        'query': `
-        query 
+let get = `
+       query 
         {
             getPriceHistory(
                 coinPairKey: \"BTC\"
@@ -67,9 +53,7 @@ let get = {
                 finalPrice
              }
         }
-        `
-    }
-};
+        `;
 
 let getLatestQuery = `
         query 
@@ -80,18 +64,75 @@ let getLatestQuery = `
 
 let typeName = `{ __typename }`;
 
-let event = {
-    'requestContext': {
-        'httpMethod': 'POST'
-    },
-    'body': {
-        'query': typeName
-    }
-};
+let testQuery = `
+        mutation 
+        {
+            a1: upsertPriceHistory(                
+                priceHistory: {
+                    coinPairKey: "BTC"
+                    timeKey: "2017-08-08T08:08:08Z"                    
+                    exchange: "GDAX"
+                    finalPrice: 8
+                }
+            ) { coinPairKey timeKey }
+            a2: deletePriceHistory(
+                coinPairKey: "BTC"
+                timeKey: "2017-08-08T08:08:08Z"       
+            ){coinPairKey timeKey exchange}
+        }
+        `;
 
-let context = null;
+let allItems = `
+        query 
+        {
+            allPriceHistories(priceHistory:{finalPrice: 2}){ coinPairKey timeKey exchange finalPrice }         
+        }
+        `;
+
+let filterQuery = `
+query
+{
+  priceHistories
+  {
+    coinPairKey
+    timeKey
+    finalPrice
+  }
+}
+`;
+
+let variables = { rql: 'finalPrice=2' };
+
 process.env.DYNAMODB_TABLE = 'pricehistory-dev';
 process.env.REGION = 'us-east-1';
 
+
+const body = {
+    query: testQuery,
+    variables: variables,
+}
+
+const event = {
+    httpMethod: 'POST',
+    body: body,
+    headers: {}
+};
+
+const context = {};
+const cb = (err, result) => {
+    console.log(err);
+    console.log(result);
+    let body;
+    let errors;
+    if (Boolean(result)) {
+        body = JSON.parse(result.body);
+        errors = body.errors;
+        if (!!errors) {
+            console.log(errors);
+        }
+    }
+}
+
+
 //TODO: fake out parameters so can actually test using debugger
-graphapi(event, context, cb);
+graphqlHandler(event, context, cb);
