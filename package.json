@@ -10,7 +10,9 @@
     "graphql": "0.12.0",
     "lodash": "^4.17.5",
     "moment": "^2.20.1",
-    "rql": "^0.3.3"
+    "pg": "^7.4.1",
+    "rql": "^0.3.3",
+    "serverless-vpc-discovery": "^1.0.11"
   },
   "devDependencies": {
     "@types/graphql": "^0.12.4",
@@ -18,6 +20,7 @@
     "@types/lodash": "^4.14.104",
     "@types/moment": "^2.13.0",
     "@types/node": "^9.4.6",
+    "@types/pg": "^7.4.5",
     "jest": "^22.4.2",
     "serverless-plugin-typescript": "^1.1.5",
     "ts-node": "^5.0.0",

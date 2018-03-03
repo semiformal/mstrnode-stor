@@ -58,7 +58,8 @@ let get = `
 let getLatestQuery = `
         query 
         {
-            getLatestPriceHistory(coinPairKey: \"BTC\") {coinPairKey exchange finalPrice}
+            a1: getLatestPriceHistory {coinPairKey exchange finalPrice}
+            a2: getLatestPriceHistory {coinPairKey exchange finalPrice}
         }
         `;
 
@@ -115,7 +116,7 @@ process.env.REGION = 'us-east-1';
 
 
 const body = {
-    query: allAll,
+    query: getLatestQuery,
     variables: undefined,
 }
 
@@ -140,6 +141,43 @@ const cb = (err, result) => {
     }
 }
 
+
+import * as pg from 'pg';
+
+process.env.PGDATABASE = 'pacprice';
+process.env.PGPORT = '5432';
+process.env.PGUSER = 'pacprice';
+process.env.PGHOST = 'pacprice.cynsn8lti9x1.us-east-1.rds.amazonaws.com';
+
+var dbConfig = {
+    user: 'pacprice',
+    password: 'zGp_JXxc8oW`KW}4{hG9uyWC',
+    database: 'pacprice',
+    host: 'pacprice.cynsn8lti9x1.us-east-1.rds.amazonaws.com',
+    port: 5432
+};
+// var client = new pg.Client(dbConfig);
+// client.connect();
+
+// client.query(`
+//     SELECT
+//     id, exchange, (price * usd_conversion_rate) as converted_price
+//     FROM prices 
+//     WHERE timestamp < $1
+//     ORDER BY timestamp, converted_price DESC
+//     LIMIT 1`,
+//     ['Now()'],
+//     (err, res) => {
+
+//         console.log(err ? err.stack : res.rows[0]) // Hello World!
+//         client.end()
+//     })
+
+
+// const res = await client.query('SELECT $1::text as message', ['Hello world!'])
+// console.log(res.rows[0].message) // Hello world!
+// await client.end()
+// client.end();
 
 //TODO: fake out parameters so can actually test using debugger
 graphqlHandler(event, context, cb);

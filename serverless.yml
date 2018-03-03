@@ -11,6 +11,11 @@ provider:
     DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
     REGION : ${opt:region, self:provider.region}
     STAGE : ${self:provider.stage}
+    PGDATABASE: pacprice
+    PGPORT: '5432'
+    PGHOST: pacprice.cynsn8lti9x1.us-east-1.rds.amazonaws.com
+    PGUSER: pacprice    
+    PGPASSWORD: zGp_JXxc8oW`KW}4{hG9uyWC
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -70,6 +75,15 @@ functions:
           cors: true
 
           
-plugins:
+plugins:  
   - serverless-plugin-typescript
+  - serverless-vpc-discovery
+
+custom:
+  vpc:
+    vpcName: 'lambdaVPC'
+    subnetNames:
+      - 'lambdaPrivate'
+    securityGroupNames:
+      - 'paccoin-nodes'
 

@@ -17,9 +17,16 @@ import * as AWS from 'aws-sdk';
 import { read } from 'fs';
 import { callbackify } from 'util';
 import { DocumentClient } from 'aws-sdk/lib/dynamodb/document_client';
+import { Client, Pool } from 'pg';
 
 // TODO: don't hard code this
 AWS.config.update({ region: process.env.REGION || 'us-east-1' });
+
+// const pgPool = new Pool({
+//     max: 10,
+//     idleTimeoutMillis: 10,
+//     connectionTimeoutMillis: 2000,
+// })
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
@@ -97,14 +104,14 @@ const priceHistorySchema = new GraphQLSchema({
             allPriceHistories: {
                 description: 'Table scan filtered by a priceHistory object. This is expensive.',
                 args: {
-                    priceHistory: { type: PriceHistoryQueryType }                  
+                    priceHistory: { type: PriceHistoryQueryType }
                 },
                 type: new GraphQLList(PriceHistoryType),
                 resolve: (parent, args) => allPriceHistories(args.priceHistory)
             },
             getLatestPriceHistory: {
                 args: {
-                    coinPairKey: { type: new GraphQLNonNull(GraphQLString) }
+                    coinPairKey: { type: GraphQLString }
                 },
                 type: PriceHistoryType,
                 resolve: (parent, args) => getLatestPriceHistory(args.coinPairKey)
@@ -146,7 +153,7 @@ const getPriceHistory = (coinPairKey, timeKey) => promisify(callback =>
     .then((result: any) => result.Item);
 
 const allPriceHistories = (priceHistory) => promisify(callback => {
-    
+
     let filter = _.reduce(priceHistory, (result: any, value, key) => {
         result += ' ' + key + ' = :' + key + ','
         return result;
@@ -156,15 +163,15 @@ const allPriceHistories = (priceHistory) => promisify(callback => {
         result[':' + key] = value;
         return result;
     }, {});
-    
-    filter = filter.slice(0,-1);
-    if(_.isEmpty(filter)){
+
+    filter = filter.slice(0, -1);
+    if (_.isEmpty(filter)) {
         filter = undefined;
         values = undefined;
     }
 
     return dynamoDb.scan({
-        TableName: process.env.DYNAMODB_TABLE,        
+        TableName: process.env.DYNAMODB_TABLE,
         FilterExpression: filter,
         ExpressionAttributeValues: values,
         ReturnConsumedCapacity: "TOTAL",
@@ -175,24 +182,70 @@ const allPriceHistories = (priceHistory) => promisify(callback => {
         return result.Items;
     });
 
-const getLatestPriceHistory = (coinPairKey) => promisify(callback =>
-    dynamoDb.query({
-        TableName: process.env.DYNAMODB_TABLE,
-        KeyConditionExpression: '#cpk = :cpk',
-        ExpressionAttributeNames: {
-            '#cpk': 'coinPairKey'
-        },
-        ExpressionAttributeValues: {
-            ':cpk': coinPairKey
-        },
-        Limit: 1,
-        ScanIndexForward: false
-    }, callback))
-    .then((result: any) => {
-        return result.Items[0];
-    });
 
-const upsertPriceHistory = (args) => promisify(callback => {    
+const getLatestPriceHistory = (coinPairKey) => {
+
+    const client = new Client({});
+    client.connect()
+    return client.query(
+        `SELECT
+        id, exchange, (price * usd_conversion_rate) as converted_price
+        FROM prices
+        WHERE timestamp < $1
+        ORDER BY timestamp, converted_price DESC
+        LIMIT 1`,
+        ['Now()'])
+        .then((result: any) => {         
+            let row = result.rows[0];
+            let val = {
+                coinPairKey: row.id,
+                exchange: row.exchange,
+                finalPrice: row.converted_price
+            }          
+            client.end();  
+            return val;
+        })
+        .catch((e) => {
+            client.end();
+            console.error(e.stack)
+            throw e;
+        });
+};
+
+
+// const getLatestPriceHistory = (coinPairKey) => promisify(callback => {
+//     console.log('connecting to pg with:')
+//     console.log(dbConfig.host);
+
+//     return client.query(`
+//         SELECT
+//         id, exchange, (price * usd_conversion_rate) as converted_price
+//         FROM prices
+//         WHERE timestamp < $1
+//         ORDER BY timestamp, converted_price DESC
+//         LIMIT 1`,
+//         ['Now()'],
+//         callback);
+//     // (err, res) => {
+
+
+//     //     callback(val) // Hello World!        
+//     //     client.end()
+//     // });
+// })
+//     .then((result: any) => {
+//         let row = result.rows[0];
+//         let val = {
+//             coinPairKey: row.id,
+//             exchange: row.exchange,
+//             finalPrice: row.converted_price
+//         }
+//         client.end();
+//         return val;
+//     });
+
+
+const upsertPriceHistory = (args) => promisify(callback => {
     var priceHistory = args.priceHistory;
     let priceHistoryNoKeys = _.omit(priceHistory, ['coinPairKey', 'timeKey']);
 
@@ -253,8 +306,8 @@ const promisify = foo => new Promise((resolve, reject) => {
 //         if (!_.isNil(body.query)) {
 //             graphqlQuery = body.query;
 //         } else {
-//             callback(null, {statusCode: 500, body: `ERROR: no query element on request ${event.body}` });  
-//         }        
+//             callback(null, {statusCode: 500, body: `ERROR: no query element on request ${event.body}` });
+//         }
 //     } else if (event.requestContext.httpMethod === "GET") {
 //         graphqlQuery = event.queryStringParameters.query;
 //     } else {
