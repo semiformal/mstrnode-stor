@@ -19,7 +19,7 @@ import { callbackify } from 'util';
 import { DocumentClient } from 'aws-sdk/lib/dynamodb/document_client';
 
 // TODO: don't hard code this
-AWS.config.update({ region: process.env.REGION });
+AWS.config.update({ region: process.env.REGION || 'us-east-1' });
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
@@ -158,13 +158,17 @@ const allPriceHistories = (priceHistory) => promisify(callback => {
     }, {});
     
     filter = filter.slice(0,-1);
+    if(_.isEmpty(filter)){
+        filter = undefined;
+        values = undefined;
+    }
 
     return dynamoDb.scan({
         TableName: process.env.DYNAMODB_TABLE,        
         FilterExpression: filter,
         ExpressionAttributeValues: values,
         ReturnConsumedCapacity: "TOTAL",
-        Limit: 1000
+        Limit: 10000
     }, callback);
 })
     .then((result: any) => {

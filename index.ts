@@ -89,6 +89,13 @@ let allItems = `
         }
         `;
 
+let allAll = `
+        query 
+        {
+            allPriceHistories{ coinPairKey timeKey exchange finalPrice }         
+        }
+        `;
+
 let filterQuery = `
 query
 {
@@ -108,8 +115,8 @@ process.env.REGION = 'us-east-1';
 
 
 const body = {
-    query: testQuery,
-    variables: variables,
+    query: allAll,
+    variables: undefined,
 }
 
 const event = {
