@@ -15,7 +15,7 @@ provider:
     PGPORT: '5432'
     PGHOST: pacprice.cynsn8lti9x1.us-east-1.rds.amazonaws.com
     PGUSER: pacprice    
-    PGPASSWORD: zGp_JXxc8oW`KW}4{hG9uyWC
+    PGPASSWORD: 000_JXxc8oW`KW}4{hG9uyWC
   iamRoleStatements:
     - Effect: Allow
       Action:
